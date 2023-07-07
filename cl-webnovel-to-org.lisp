@@ -48,13 +48,14 @@
       (aref (lquery:$
 	     *html-plump*
 	     *page-content-tag* (text)) 0)
-      (let ((paragrahps (remove-if
+      (let ((paragraphs (remove-if
 			 #'(lambda (s)
 			     (or (search "http" s :test 'char-equal)
-				 (search "© copyright" s :test 'char-equal)))
+				 (search "© copyright" s :test 'char-equal)
+				 (cl-ppcre:scan "^\\*+[\\* ]*$" s)))
 			 (lquery:$ *html-plump* "p" (text)))))
 	(format nil "~{~A~%~}"
-		(coerce paragrahps 'list))))
+		(coerce paragraphs 'list))))
   )
 
 (defun get-title ()
