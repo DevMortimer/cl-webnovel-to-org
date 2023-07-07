@@ -51,6 +51,11 @@
 
 (defun append-to-org ()
   "Appends the content and title to the org file."
+  (with-open-file (stream *org-file* :direction :output :if-exists :append)
+    (format stream
+	    "* ~A~%~A~%" (get-title) (get-content)))
+  
+  t
   )
 
 (defun setup (&key url use-buttons-p last-chap content-tag title-tag)
@@ -81,7 +86,7 @@ Will run interactively when not given the arguments."
   ;; sets the rest of the variables
   (setf *html-plump* (get-plump))
   (format t "What's the title of the novel? ")
-  (setf *org-title (read-line))
+  (setf *org-title* (read-line))
   (setf *org-file* (concatenate 'string
 				*org-title*
 				".org"))
