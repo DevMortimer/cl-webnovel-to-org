@@ -1,0 +1,24 @@
+* cl-webnovel-to-org
+*** _DevMort_
+
+This project aims to scrape a web novel from a link and get the contents into a single org file.
+
+What you do with that org file is up to you. Whether to convert it into a PDF or an EPUB file (with you own costumizations).
+
+** License
+    Converts a web novel into an org file.
+    Copyright (C) 2023 DevMort
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
