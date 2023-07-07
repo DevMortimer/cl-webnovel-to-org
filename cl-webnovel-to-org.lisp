@@ -54,7 +54,7 @@
 				 (search "© copyright" s :test 'char-equal)
 				 (cl-ppcre:scan "^\\*+[\\* ]*$" s)))
 			 (lquery:$ *html-plump* "p" (text)))))
-	(format nil "~{~A~%~}"
+	(format nil "~{~A~%~%~}"
 		(coerce paragraphs 'list))))
   )
 
