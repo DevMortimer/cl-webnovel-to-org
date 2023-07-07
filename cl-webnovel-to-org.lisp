@@ -51,7 +51,7 @@
       (let ((paragraphs (remove-if
 			 #'(lambda (s)
 			     (or (search "http" s :test 'char-equal)
-				 (search "© copyright" s :test 'char-equal)
+				 (search "©" s :test 'char-equal)
 				 (cl-ppcre:scan "^\\*+[\\* ]*$" s)))
 			 (lquery:$ *html-plump* "p" (text)))))
 	(format nil "~{~A~%~%~}"
