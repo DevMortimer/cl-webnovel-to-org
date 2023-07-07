@@ -4,11 +4,11 @@
 
 ;; variables
 (defparameter *page-url* nil) ; the page url to scrape. MAKE SURE TO GIVE THE FIRST CHAPTER
-(defparameter *page-use-buttons-p* nil) ; instead of incrementing the url, use the next button
 (defparameter *page-last-chapter* nil) ; the last chapter to scrape
 (defparameter *page-content-tag* nil) ; the tag of the text body
 (defparameter *page-title-tag* nil) ; the tag of the title text
-(defparameter *page-button-tag* nil) ; the button tag to get to the next chapter 
+(defparameter *page-button-tag* nil) ; the button tag to get to the next chapter
+(defparameter *page-full-of-p-p* nil) ; indicator if the page is full of <p>
 (defparameter *org-file* nil) ; the org file to append the content
 (defparameter *org-title* nil) ; the title of the novel
 (defparameter *org-author* nil) ; the author
@@ -26,18 +26,35 @@
   (lquery:$ (initialize (dex:get *page-url*)))
   )
 
+(defun get-hostname-from-url (url)
+  (if (ppcre:scan-to-strings "^https?://([^/]+)" url)
+      (aref (nth-value 1 (ppcre:scan-to-strings "^https?://([^/]+)" url)) 0)))
+      
+
 (defun get-next-chapter ()
   "Gets the next chapter."
-  (if (string= *page-use-buttons-p* "y")
-      (aref (lquery:$ *html-plump* *page-button-tag* (attr :href)) 0)
-      nil)
+  (let ((next-chap (aref (lquery:$ *html-plump* *page-button-tag* (attr :href)) 0)))
+    (if (ppcre:scan "^https?://" next-chap)
+	next-chap
+	(concatenate 'string
+		     "https://"
+		     (get-hostname-from-url *page-url*)
+		     next-chap)))
   )
 
 (defun get-content ()
   "Gets the text body of the chapter."
-  (aref (lquery:$
-	  *html-plump*
-	  *page-content-tag* (text)) 0)
+  (if (not *page-full-of-p-p*)
+      (aref (lquery:$
+	     *html-plump*
+	     *page-content-tag* (text)) 0)
+      (let ((paragrahps (remove-if
+			 #'(lambda (s)
+			     (or (search "http" s :test 'char-equal)
+				 (search "© copyright" s :test 'char-equal)))
+			 (lquery:$ *html-plump* "p" (text)))))
+	(format nil "~{~A~%~}"
+		(coerce paragrahps 'list))))
   )
 
 (defun get-title ()
@@ -61,15 +78,13 @@
   (format t "This may take a while. Please standby... ~%~A~%" *org-title*)
   (finish-output)
   
-  (if (or (string= *page-use-buttons-p* "y")
-	  (string= *page-use-buttons-p* "t"))
-      (loop for i from 0 below (parse-integer *page-last-chapter*) do
-	(format t "~A...~%" (get-title))
-	(finish-output)
-	(append-to-org)
-	(when (not (= i (1- (parse-integer *page-last-chapter*))))
-		   (setf *page-url* (get-next-chapter))
-		   (setf *html-plump* (get-plump)))))
+  (loop for i from 0 below (parse-integer *page-last-chapter*) do
+    (format t "~A...~%" (get-title))
+    (finish-output)
+    (append-to-org)
+    (when (not (= i (1- (parse-integer *page-last-chapter*))))
+      (setf *page-url* (get-next-chapter))
+      (setf *html-plump* (get-plump))))
 
   ;; TODO: when not using buttons? idk if needed... hmmm
 
@@ -79,7 +94,7 @@
   t
   )
 
-(defun setup (&key url use-buttons-p last-chap content-tag title-tag)
+(defun setup (&key url last-chap content-tag title-tag)
   "Setups the needed information on what to scrape.
 Will run interactively when not given the arguments."
 
@@ -87,24 +102,9 @@ Will run interactively when not given the arguments."
   (finish-output)
   (interactive-when-not-exists url *page-url*)
 
-  (format t "Use the next button to get to the next page (y/n)? ~%")
+  (format t "What's the tag for the next chapter buttons? ")
   (finish-output)
-  (interactive-when-not-exists use-buttons-p *page-use-buttons-p*)
-  (when (or (string= *page-use-buttons-p* "y") (string= *page-use-buttons-p* "t"))
-    (format t "What's the tag for the next chapter buttons? ")
-    (finish-output)
-    (setf *page-button-tag* (read-line)))
-  
-  (loop while (not (or (string= *page-use-buttons-p* "y")
-		       (string= *page-use-buttons-p* "t")
-		       (string= *page-use-buttons-p* "n")
-		       (string= *page-use-buttons-p* "nil")))
-	do
-	   (format t "~%[ERROR] Answer only y/n.~%")
-	   (finish-output)
-	   (format t "Use the next button to get to the next page (y/n)? ~%")
-	   (finish-output)
-	   (interactive-when-not-exists use-buttons-p *page-use-buttons-p*))
+  (setf *page-button-tag* (read-line))
   
   (format t "Upto how many chapters would you like to scrape? ~%")
   (finish-output)
@@ -119,6 +119,13 @@ Will run interactively when not given the arguments."
   (interactive-when-not-exists title-tag *page-title-tag*)
 
   ;; sets the rest of the variables
+  (loop while (not (or (string= *page-full-of-p-p* "y")
+		       (string= *page-full-of-p-p* "n")))
+	do
+	   (format t "Is the page full of <p>? This is important. (y/n): ")
+	   (finish-output)
+	   (setf *page-full-of-p-p* (read-line)))
+				
   (setf *html-plump* (get-plump))
   (format t "What's the title of the novel? ")
   (finish-output)

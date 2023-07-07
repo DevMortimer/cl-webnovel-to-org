@@ -6,21 +6,33 @@ This project aims to scrape a web novel from a link and get the contents into a 
 What you do with that org file is up to you. Whether to convert it into a PDF or an EPUB file (with you own costumizations).
 
 ** Installation
-1. Put the directory on `/path/to/quicklisp/local-projects`.
-2. Run `make` and put the resulting `cl-webnovel-to-org` binary somewhere on $PATH.
+1. Put the directory on =/path/to/quicklisp/local-projects=.
+2. Run =make= and put the resulting =cl-webnovel-to-org= binary somewhere on $PATH.
 
 ** Usage
 *** SBCL
-1. Put the directory on `/path/to/quicklisp/local-projects`.
-2. Load the project with `sbcl` and run:
+1. Put the directory on =/path/to/quicklisp/local-projects=.
+2. Load the project with =sbcl= and run:
 #+begin_src bash
   > (ql:quickload :cl-webnovel-to-org)
   > (setup)
-  > (run)
 #+end_src
 *** Using the binary
-Run in terminal: `cl-webnovel-to-org`. This will run `(setup)` and then `(run)`.
+1. =make install=
+2. Run in terminal: =cl-webnovel-to-org=.
 
+** Recommended Sites
+Choose one from [[https://fmhy.pages.dev/readingpiracyguide/#light-novel-sites][here]]. _Don't use sites that have cloudflare_.
+
+** FAQ
+*** What do I put into the tags?
+1. Inspect Element > Go to button, text content, or title > right click > copy > css selector
+2. Paste that on the question on =(setup)=.
+*** It suddenly failed?
+a. Check the last chapter it failed on, see if there's some new "gimmick" on the page.
+b. You were cloudflared.
+_Find another site._
+   
 ** License
     Converts a web novel into an org file.
     Copyright (C) 2023 DevMort
