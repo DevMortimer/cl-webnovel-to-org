@@ -102,3 +102,20 @@ Will run interactively when not given the arguments."
   
   t
   )
+
+(defun run ()
+  "Runs the program until it reaches the last chapter."
+  (if (or (string= *page-use-buttons-p* "y")
+	  (string= *page-use-buttons-p* "t"))
+      (loop for i from 0 below (1- (parse-integer *page-last-chapter*)) do
+	(append-to-org)
+	(setf *page-url* (get-next-chapter))
+	(setf *html-plump* (get-plump)))
+      )
+
+  ;; TODO: when not using buttons
+  )
+
+(defun run-binary ()
+  (setup)
+  (run))

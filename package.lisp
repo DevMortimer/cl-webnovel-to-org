@@ -1,4 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:cl-webnovel-to-org
-  (:use #:cl))
+  (:use #:cl)
+  (:export #:run-binary))
