@@ -2,4 +2,4 @@
 
 (defpackage #:cl-webnovel-to-org
   (:use #:cl)
-  (:export #:run-binary))
+  (:export #:setup))
