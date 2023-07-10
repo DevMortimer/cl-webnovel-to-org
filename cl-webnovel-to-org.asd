@@ -6,6 +6,8 @@
   :license  "AGPLV3"
   :version "0.0.1"
   :serial t
-  :depends-on (#:dexador #:lquery #:local-time)
+  :depends-on (#:dexador
+	       #:lquery
+	       #:local-time)
   :components ((:file "package")
                (:file "cl-webnovel-to-org")))

@@ -5,20 +5,21 @@
 ;; variables
 (defparameter *page-url* nil) ; the page url to scrape. MAKE SURE TO GIVE THE FIRST CHAPTER
 (defparameter *page-last-chapter* nil) ; the last chapter to scrape
-(defparameter *page-content-tag* nil) ; the tag of the text body
 (defparameter *page-title-tag* nil) ; the tag of the title text
 (defparameter *page-button-tag* nil) ; the button tag to get to the next chapter
-(defparameter *page-full-of-p-p* nil) ; indicator if the page is full of <p>
 (defparameter *org-file* nil) ; the org file to append the content
 (defparameter *org-title* nil) ; the title of the novel
 (defparameter *org-author* nil) ; the author
 (defvar *html-plump* nil) ; the data structure used by lquery
 
 ;; macros
-(defmacro interactive-when-not-exists (case-value var)
+(defmacro interactive-when-not-exists (prompt case-value var)
   `(if ,case-value
        (setf ,var ,case-value)
-       (setf ,var (read-line))))
+       (progn
+	 (format t ,prompt)
+	 (finish-output)
+	 (setf ,var (read-line)))))
 
 ;; functions
 (defun get-plump ()
@@ -44,18 +45,14 @@
 
 (defun get-content ()
   "Gets the text body of the chapter."
-  (if (not *page-full-of-p-p*)
-      (aref (lquery:$
-	     *html-plump*
-	     *page-content-tag* (text)) 0)
-      (let ((paragraphs (remove-if
-			 #'(lambda (s)
-			     (or (search "http" s :test 'char-equal)
-				 (search "©" s :test 'char-equal)
-				 (cl-ppcre:scan "^\\*+[\\* ]*$" s)))
-			 (lquery:$ *html-plump* "p" (text)))))
-	(format nil "~{~A~%~%~}"
-		(coerce paragraphs 'list))))
+  (let ((paragraphs (remove-if
+		     #'(lambda (s)
+			 (or (search "http" s :test 'char-equal)
+			     (search "©" s :test 'char-equal)
+			     (cl-ppcre:scan "^\\*+[\\* ]*$" s)))
+		     (lquery:$ *html-plump* "p" (text)))))
+    (format nil "~{~A~%~%~}"
+	    (coerce paragraphs 'list)))
   )
 
 (defun get-title ()
@@ -86,60 +83,34 @@
     (when (not (= i (1- (parse-integer *page-last-chapter*))))
       (setf *page-url* (get-next-chapter))
       (setf *html-plump* (get-plump))))
-
-  ;; TODO: when not using buttons? idk if needed... hmmm
-
+  
   (format t "~%Done.~%")
   (finish-output)
   
   t
   )
 
-(defun setup (&key url last-chap content-tag title-tag)
+(defun setup (&key url button-tag last-chap title-tag novel-title novel-author)
   "Setups the needed information on what to scrape.
 Will run interactively when not given the arguments."
 
-  (format t "Give the first chapter link: ~%")
-  (finish-output)
-  (interactive-when-not-exists url *page-url*)
-
-  (format t "What's the tag for the next chapter buttons? ")
-  (finish-output)
-  (setf *page-button-tag* (read-line))
-  
-  (format t "Upto how many chapters would you like to scrape? ~%")
-  (finish-output)
-  (interactive-when-not-exists last-chap  *page-last-chapter*)
-
-  (format t "Now give the tag that houses the content of each chapter: ~%")
-  (finish-output)
-  (interactive-when-not-exists content-tag  *page-content-tag*)
-
-  (format t "Lastly, give the tag that houses the titles of each chapter: ~%")
-  (finish-output)
-  (interactive-when-not-exists title-tag *page-title-tag*)
-
-  ;; sets the rest of the variables
-  (loop while (not (or (string= *page-full-of-p-p* "y")
-		       (string= *page-full-of-p-p* "n")))
-	do
-	   (format t "Is the page full of <p>? This is important. (y/n): ")
-	   (finish-output)
-	   (setf *page-full-of-p-p* (read-line)))
-				
+  (interactive-when-not-exists "Give the first chapter link: ~%"
+			       url *page-url*)
+  (interactive-when-not-exists "Give the tag for the next button: ~%"
+			       button-tag *page-button-tag*)
+  (interactive-when-not-exists "Upto how many chapters would you like to scrape? ~%"
+			       last-chap  *page-last-chapter*)
+  (interactive-when-not-exists "Lastly, give the tag that houses the titles of each chapter: ~%"
+			       title-tag *page-title-tag*)
   (setf *html-plump* (get-plump))
-  (format t "What's the title of the novel? ")
-  (finish-output)
-  (setf *org-title* (read-line))
+  (interactive-when-not-exists "What's the title of the novel? " novel-title *org-title*)
   (setf *org-file* (concatenate 'string
 				*org-title*
 				".org"))
-  (format t "Who's the author? ")
-  (finish-output)
-  (setf *org-author* (read-line))
+  (interactive-when-not-exists "Who's the author? " novel-author *org-author*)
 
   ;; initialize the org file
-  (with-open-file (stream *org-file* :direction :output)
+  (with-open-file (stream *org-file* :direction :output :if-exists nil)
     (format stream "#+TITLE: ~A~%#+AUTHOR: ~A~%#+DATE: ~A~%#+UID: 0~%~%"
 	    *org-title* *org-author*
 	    (local-time:format-timestring nil (local-time:now)
