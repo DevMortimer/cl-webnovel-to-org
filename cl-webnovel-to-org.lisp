@@ -10,6 +10,8 @@
 (defparameter *org-file* nil) ; the org file to append the content
 (defparameter *org-title* nil) ; the title of the novel
 (defparameter *org-author* nil) ; the author
+(defparameter *comments-tag* nil) ; the comments tag
+(defparameter *stop-after* nil) ; when to stop parsing
 (defvar *html-plump* nil) ; the data structure used by lquery
 
 ;; macros
@@ -35,24 +37,36 @@
 (defun get-next-chapter ()
   "Gets the next chapter."
   (let ((next-chap (aref (lquery:$ *html-plump* *page-button-tag* (attr :href)) 0)))
-    (if (ppcre:scan "^https?://" next-chap)
-	next-chap
-	(concatenate 'string
-		     "https://"
-		     (get-hostname-from-url *page-url*)
-		     next-chap)))
+    (if (not next-chap)
+	(aref (lquery:$ (inline (lquery-funcs:children (lquery:$ *html-plump* *page-button-tag*) "a"))
+		(attr :href)) 0)
+	(if (ppcre:scan "^https?://" next-chap)
+	    next-chap
+	    (concatenate 'string
+			 "https://"
+			 (get-hostname-from-url *page-url*)
+			 next-chap))))
   )
 
 (defun get-content ()
   "Gets the text body of the chapter."
-  (let ((paragraphs (remove-if
-		     #'(lambda (s)
-			 (or (search "http" s :test 'char-equal)
-			     (search "©" s :test 'char-equal)
-			     (cl-ppcre:scan "^\\*+[\\* ]*$" s)))
-		     (lquery:$ *html-plump* "p" (text)))))
-    (format nil "~{~A~%~%~}"
-	    (coerce paragraphs 'list)))
+  (let ((content '())
+	(stop nil))
+    (dolist (p (coerce (lquery:$ *html-plump* "p") 'list))
+      (if stop
+	  (return)
+	  (let ((res (lquery:$ p "img"))) ; for images
+	    (if (not (equalp res #()))
+		(push (format nil "[[~A]]~%~%" (aref (lquery:$ res (attr :src)) 0)) content)
+		(when (or (equalp  (lquery-funcs:parent p *comments-tag*) #())
+			  (string= *comments-tag* "n"))
+		  (if (or (not (member (aref (lquery:$ p (text)) 0)
+				       (split-sequence:split-sequence #\, *stop-after*)
+				       :test #'string=))
+			  (not (string= *stop-after* "n")))
+		      (push (aref (lquery:$ p (text)) 0) content)
+		      (setf stop t)))))))
+    (format nil "~{~A~%~%~}" (reverse content)))
   )
 
 (defun get-title ()
@@ -90,7 +104,7 @@
   t
   )
 
-(defun setup (&key url button-tag last-chap title-tag novel-title novel-author)
+(defun setup (&key url button-tag last-chap stop-after comment-tag title-tag novel-title novel-author)
   "Setups the needed information on what to scrape.
 Will run interactively when not given the arguments."
 
@@ -100,6 +114,10 @@ Will run interactively when not given the arguments."
 			       button-tag *page-button-tag*)
   (interactive-when-not-exists "Upto how many chapters would you like to scrape? ~%"
 			       last-chap  *page-last-chapter*)
+  (interactive-when-not-exists "If there are comments, give the class of the div above the comments (n if there isn't): "
+			       comment-tag *comments-tag*)
+  (interactive-when-not-exists "Stop after encountering a phrase/text? If so what is it (n if there isn't ; separate it with commas if there are multiple hits you want): "
+			       stop-after *stop-after*)
   (interactive-when-not-exists "Lastly, give the tag that houses the titles of each chapter: ~%"
 			       title-tag *page-title-tag*)
   (setf *html-plump* (get-plump))
@@ -111,10 +129,11 @@ Will run interactively when not given the arguments."
 
   ;; initialize the org file
   (with-open-file (stream *org-file* :direction :output :if-exists nil)
-    (format stream "#+TITLE: ~A~%#+AUTHOR: ~A~%#+DATE: ~A~%#+UID: 0~%~%"
-	    *org-title* *org-author*
-	    (local-time:format-timestring nil (local-time:now)
-					  :format '(:year))))
+		  (format stream "#+TITLE: ~A~%#+AUTHOR: ~A~%#+DATE: ~A~%#+UID: ~A~%#+OPTIONS: html-postamble:nil~%~%"
+			  *org-title* *org-author*
+			  (local-time:format-timestring nil (local-time:now)
+							:format '(:year))
+			  *org-title*))
 
   (run)
   
