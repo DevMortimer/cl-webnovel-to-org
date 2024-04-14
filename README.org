@@ -3,7 +3,7 @@
 
 This project aims to scrape a web novel from a link and get the contents into a single org file.
 
-What you do with that org file is up to you. Whether to convert it into a PDF or an EPUB file (with you own costumizations).
+What you do with that org file is up to you. Whether to convert it into a PDF or an EPUB file (with your own customizations).
 
 ** Installation
 1. Put the directory on =/path/to/quicklisp/local-projects=.
@@ -35,7 +35,7 @@ _Find another site._
    
 ** License
     Converts a web novel into an org file.
-    Copyright (C) 2023 DevMort
+    Copyright (C) 2024 DevMort
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
