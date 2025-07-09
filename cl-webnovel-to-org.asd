@@ -3,7 +3,7 @@
 (asdf:defsystem #:cl-webnovel-to-org
   :description "Scrapes a web novel and puts the content into an org file."
   :author "DevMort"
-  :license  "AGPLV3"
+  :license  "MIT"
   :version "0.0.1"
   :serial t
   :depends-on (#:dexador

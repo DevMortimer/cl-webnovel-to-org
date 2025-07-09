@@ -30,8 +30,21 @@ A command-line tool written in Common Lisp to scrape webnovels from a website an
 - [Dexador](https://github.com/fukamachi/dexador): High-performance HTTP client for Common Lisp.
 - [lquery](https://github.com/g000001/lquery): A DOM manipulation library for Common Lisp, similar to jQuery.
 - [local-time](https://github.com/dlowe-net/local-time): A library for manipulating dates and times.
+- [split-sequence](https://github.com/eshamster/split-sequence): A utility for splitting sequences.
+- [quri](https://github.com/fukamachi/quri): A URI manipulation library.
+- [jonathan](https://github.com/fukamachi/jonathan): A JSON encoder/decoder.
+- [cl-ppcre](https://github.com/edicl/cl-ppcre): A portable Perl-compatible regular expression library.
 
 These will be installed automatically via Quicklisp.
+
+## Advanced Features
+
+This tool includes several strategies to find the "next chapter" link, making it more robust and adaptable to different website structures. These strategies are tried in order until one succeeds:
+
+1.  **User-Provided Selector**: Uses the CSS selector you provide.
+2.  **Keyword Search**: Looks for links with common "next" keywords (e.g., "Next", "next", ">").
+3.  **`rel="next"` Attribute**: Searches for a link with the `rel="next"` attribute, a common web standard.
+4.  **Embedded JSON Data**: Parses embedded JSON data in the page, which is common on modern, JavaScript-heavy websites.
 
 ## Installation
 
