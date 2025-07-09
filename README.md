@@ -1,4 +1,17 @@
-# cl-webnovel-to-org
+<p align="center">
+  <img src="./logo.png" alt="Common Lisp Logo" width="200"/>
+</p>
+
+<h1 align="center">cl-webnovel-to-org</h1>
+
+<p align="center">
+  <a href="https://www.lisp-lang.org/">
+    <img src="https://img.shields.io/badge/Language-Common%20Lisp-blue.svg" alt="Language: Common Lisp">
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  </a>
+</p>
 
 A command-line tool written in Common Lisp to scrape webnovels from a website and compile them into a single, clean Org-mode file. Once you have the Org file, you can easily convert it to other formats like EPUB or PDF using Pandoc.
 

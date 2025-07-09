@@ -47,8 +47,8 @@
   (let ((nodes (lquery:$ dom selector)))
     (when (plusp (length nodes))
       (if attribute
-          (lquery:$ nodes (attr attribute))
-          (lquery:$ nodes (text))))))
+          (aref (lquery:$ nodes (attr attribute)) 0)
+          (aref (lquery:$ nodes (text)) 0)))))
 
 (defun make-absolute-url (base-url new-path)
   "Constructs an absolute URL from a base URL and a new path."
@@ -89,26 +89,34 @@
   "Gets the URL for the next chapter."
   (let* ((nodes (lquery:$ (current-dom config) (button-tag config)))
          (href (when (plusp (length nodes))
-                 (or (lquery:$ nodes (attr :href))
-                     (lquery:$ nodes "a" (attr :href))))))
+                 (let ((direct-href (safe-query nodes nil :attribute :href))
+                       (child-href (safe-query nodes "a" :attribute :href)))
+                   (or direct-href child-href)))))
     (when href
-      (make-absolute-url (url config) (aref href 0)))))
+      (make-absolute-url (url config) href))))
 
 (defun get-chapter-content (config)
-  "Gets the text body of the chapter."
+  "Gets the text body of the chapter, including images."
   (let ((content '())
         (stop-phrases (if (string= "n" (stop-after config))
                           '()
                           (split-sequence:split-sequence #\, (stop-after config)))))
-    (lquery:$ (current-dom config) "p"
-      (each (lambda (p-node)
-              (let ((text (lquery:$ p-node (text))))
-                (when (and text (plusp (length text)))
-                  (if (member (aref text 0) stop-phrases :test #'string=)
-                      (return-from get-chapter-content (format nil "~{~A~%~%~}" (reverse content))) ; Stop processing
-                      (if (or (string= "n" (comments-tag config))
-                              (zerop (length (lquery:$ p-node (closest (comments-tag config))))))
-                          (push (aref text 0) content))))))))
+    (dolist (p-node (coerce (lquery:$ (current-dom config) "p") 'list))
+      ;; Handle images
+      (let ((img-src (safe-query p-node "img" :attribute :src)))
+        (when img-src
+          (push (format nil "[[~A]]" (make-absolute-url (url config) img-src)) content)
+          (return))) ; Assume paragraph with image has no text
+
+      ;; Handle text
+      (let ((text (safe-query p-node nil)))
+        (when (and text (plusp (length text)))
+          (when (member text stop-phrases :test #'string=)
+            (return-from get-chapter-content (format nil "~{~A~%~%~}" (reverse content))))
+
+          (when (or (string= "n" (comments-tag config))
+                    (zerop (length (lquery:$ p-node (closest (comments-tag config))))))
+            (push text content)))))
     (format nil "~{~A~%~%~}" (reverse content))))
 
 (defun append-to-org-file (config title content)

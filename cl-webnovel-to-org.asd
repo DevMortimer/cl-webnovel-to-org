@@ -9,6 +9,7 @@
   :depends-on (#:dexador
 	       #:lquery
 	       #:local-time
-	       #:split-sequence)
+	       #:split-sequence
+	       #:quri)
   :components ((:file "package")
                (:file "cl-webnovel-to-org")))
