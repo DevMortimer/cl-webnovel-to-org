@@ -8,6 +8,7 @@
   :serial t
   :depends-on (#:dexador
 	       #:lquery
-	       #:local-time)
+	       #:local-time
+	       #:split-sequence)
   :components ((:file "package")
                (:file "cl-webnovel-to-org")))
