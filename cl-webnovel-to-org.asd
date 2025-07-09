@@ -10,6 +10,8 @@
 	       #:lquery
 	       #:local-time
 	       #:split-sequence
-	       #:quri)
+	       #:quri
+	       #:jonathan
+	       #:cl-ppcre)
   :components ((:file "package")
                (:file "cl-webnovel-to-org")))
