@@ -165,6 +165,8 @@
          (let ((next-url (get-next-chapter)))
            (if next-url
                (progn
+                 ;; Adding a small random delay to avoid getting rate limited
+                 (sleep (+ 1 (random 2.0)))
                  (setf *page-url* next-url)
                  (setf *html-plump* (get-plump)))
                (progn
